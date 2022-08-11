@@ -30,6 +30,7 @@ int main(int argc, char **argv)
 
 
     // TODO: write the pixels back to output bmp file
-
-
+    BitMapPicture BMP("shed.bmp");
+    BMP.read();
+    BMP.write();
 }
