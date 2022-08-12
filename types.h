@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
+using namespace std;
 
 typedef uint8_t BYTE;
 typedef uint32_t DWORD;
@@ -45,72 +47,77 @@ typedef struct
 
 class BitMapPicture
 {
-public:
-    static unsigned int height;
-    static unsigned int width;
-    vector<RGBTRIPLE> raw_pixel;
+    public:
+        static unsigned int height;
+        static unsigned int width;
+        vector <RGBTRIPLE> raw_pixel;
 
-    BitMapPicture(unsigned int height, unsigned int width)
-    {
-        this->height = height;
-        this->width = width;
-    }
-    // TODO: read from bitmapfile picture in a linear fashion
-    void read(string inFile)
-    {
-    }
-
-    // TODO: write to bitmapfile picture
-    void write(string outFile)
-    {
-    }
-
-    // TODO:
-    void encryptBMP(unsigned int key)
-    {
-        // TODO:
-        //  Call Random Number Generator Function
-        //  Call Pixel Permutation Function
-        //  Call Pixel Encryption Function
-    }
-
-    // TODO:
-    void decryptBMP(unsigned int key)
-    {
-        // TODO:
-        //  Call Random Number Generator Function
-        //  Call Pixel Permutation Function
-        //  Call Pixel Decryption Function
-    }
-    
-    //input file format validation
-    bool is24_bit_BMP(BITMAPFILEHEADER bf, BITMAPINFOHEADER bi)
-    {
-        if (bf.bfType != 0x4d42 || bf.bfOffBits != 54 || bi.biSize != 40 ||
-            bi.biBitCount != 24 || bi.biCompression != 0)
+        BitMapPicture(string fileName)
         {
-            return false;
-        }
-        else
+            this -> fileName = fileName;
+        };
+        
+        // TODO: read from bitmapfile picture in a linear fashion
+        void read()
         {
-            return true;
-        }
-    }
+            fstream fin(fileName, ios::in);
 
-    //encryption_validation
-    bool is_valid_encryption(string encrypt_option, string option[])
-    {
-        for (int i = 0; i < 2; i++)
-        {
-            if (!encrypt_option.compare(option[i]))
+            fin.read((char *) &bf, sizeof(BITMAPFILEHEADER));
+            fin.read((char *) &bi, sizeof(BITMAPINFOHEADER));
+
+            this->height = bi.biHeight;
+            this->width = bi.biWidth;
+
+            // Calculate extra padding 
+            padding = (4 - ((width * 3) % 4)) % 4;
+            for (int y = 0; y < height; y++)
             {
-                return true;
-            }
-            else if (i == 1)
-            {
-                return false;
+                for (int x = 0; x < width; x++)
+                {
+                    RGBTRIPLE tmp;
+                    fin.read((char *) &tmp, sizeof(RGBTRIPLE));
+                    raw_pixels.push_back(tmp);
+                }
+                fin.seekg(padding, ios::cur);
             }
         }
-        return false;
-    }
+        // TODO: write to bitmapfile picture
+        void write()
+        {
+            fstream fout("hi.bmp", ios::out);
+
+            fout.write((char *) &bf, sizeof(BITMAPFILEHEADER));
+            fout.write((char *) &bi, sizeof(BITMAPINFOHEADER));
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    fout.write((char *) &raw_pixels[(width * y) + x], sizeof(RGBTRIPLE));
+                }
+                for (int k = 0; k < padding; k++)
+                {
+                    // Write null byte to complete padding
+                    fout.put(0x00);
+                }
+            }
+        }
+
+        // TODO: 
+        void encryptBMP(unsigned int key)
+        {
+            //TODO:
+            // Call Random Number Generator Function
+            // Call Pixel Permutation Function
+            // Call Pixel Encryption Function
+        }
+
+        // TODO:
+        void decryptBMP(unsigned int key)
+        {
+            //TODO:
+            // Call Random Number Generator Function
+            // Call Pixel Permutation Function
+            // Call Pixel Decryption Function
+        }
 };
