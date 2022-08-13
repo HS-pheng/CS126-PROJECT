@@ -30,9 +30,9 @@ int main(int argc, char **argv)
 
 
     // TODO: write the pixels back to output bmp file
-    BitMapPicture BMP("hi.bmp");
+    BitMapPicture BMP("sample.bmp");
     BMP.read();
-    // BMP.encryptBMP(321, 123);
-    BMP.decryptBMP(321, 123);
+    // BMP.cipherBMP(321, 123, operationMode::encrypt);
+    // BMP.cipherBMP(321, 123, operationMode::decrypt);
     BMP.write();
 }

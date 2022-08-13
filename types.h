@@ -46,6 +46,8 @@ typedef struct
 }
 RGBTRIPLE;
 
+enum operationMode {encrypt, decrypt};
+
 class BitMapPicture
 {
     public:
@@ -89,7 +91,7 @@ class BitMapPicture
         // TODO: write to bitmapfile picture
         void write()
         {
-            fstream fout("decipher.bmp", ios::out);
+            fstream fout(fileName, ios::out);
 
             fout.write((char *) &bf, sizeof(BITMAPFILEHEADER));
             fout.write((char *) &bi, sizeof(BITMAPINFOHEADER));
@@ -127,10 +129,9 @@ class BitMapPicture
             
             for (int i = totalPixels - 1; i >= 1; i--) swap(P[R[i] % i], P[i]);
         }
-        // TODO: 
-        void encryptBMP(unsigned int R0, unsigned int SV)
+
+        void cipherBMP(unsigned int R0, unsigned int SV, operationMode mode)
         {
-            //TODO:
             unsigned int totalPixels = height * width;
             unsigned int *R = new unsigned int [2 * totalPixels];
             R[0] = R0;
@@ -141,33 +142,10 @@ class BitMapPicture
 
             vector <RGBTRIPLE> tempPixels (rawPixels.begin(), rawPixels.end());
 
-            for (unsigned int i = 0; i < totalPixels; i++)
-            {
-                rawPixels[P[i]] = tempPixels[i];
-            } 
+            if (mode == operationMode::encrypt) for (unsigned int i = 0; i < totalPixels; i++) rawPixels[P[i]] = tempPixels[i];
+            else for (unsigned int i = 0; i < totalPixels; i++) rawPixels[i] = tempPixels[P[i]]; 
 
             delete[] R;
             delete[] P;
-        }
-
-        // TODO:
-        void decryptBMP(unsigned int R0, unsigned int SV)
-        {
-            unsigned int totalPixels = height * width;
-            unsigned int *R = new unsigned int [2 * totalPixels];
-            R[0] = R0;
-            generateRandomNumberArray(R);
-
-            unsigned int *P = new unsigned int [totalPixels];
-            generateRandomPermutationArray(P, R);
-
-            vector <RGBTRIPLE> tempPixels (rawPixels.begin(), rawPixels.end());
-
-            for (unsigned int i = 0; i < totalPixels; i++) rawPixels[i] = tempPixels[P[i]];
-
-            //TODO:
-            // Call Random Number Generator Function
-            // Call Pixel Permutation Function
-            // Call Pixel Decryption Function
         }
 };
