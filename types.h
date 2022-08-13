@@ -52,7 +52,7 @@ class BitMapPicture
         unsigned int height;
         unsigned int width;
         string fileName;
-        vector <RGBTRIPLE> raw_pixels;
+        vector <RGBTRIPLE> rawPixels;
         BITMAPFILEHEADER bf;
         BITMAPINFOHEADER bi;
         unsigned int padding;
@@ -81,7 +81,7 @@ class BitMapPicture
                 {
                     RGBTRIPLE tmp;
                     fin.read((char *) &tmp, sizeof(RGBTRIPLE));
-                    raw_pixels.push_back(tmp);
+                    rawPixels.push_back(tmp);
                 }
                 fin.seekg(padding, ios::cur);
             }
@@ -89,7 +89,7 @@ class BitMapPicture
         // TODO: write to bitmapfile picture
         void write()
         {
-            fstream fout("hi.bmp", ios::out);
+            fstream fout("decipher.bmp", ios::out);
 
             fout.write((char *) &bf, sizeof(BITMAPFILEHEADER));
             fout.write((char *) &bi, sizeof(BITMAPINFOHEADER));
@@ -98,7 +98,7 @@ class BitMapPicture
             {
                 for (int x = 0; x < width; x++)
                 {
-                    fout.write((char *) &raw_pixels[(width * y) + x], sizeof(RGBTRIPLE));
+                    fout.write((char *) &rawPixels[(width * y) + x], sizeof(RGBTRIPLE));
                 }
                 for (int k = 0; k < padding; k++)
                 {
@@ -108,18 +108,63 @@ class BitMapPicture
             }
         }
 
+        void generateRandomNumberArray(unsigned int R[])
+        {
+            unsigned int r = R[0];
+            for (unsigned int k = 1; k < 2 * width * height; k++)
+            {
+                r = r ^ r << 13;
+                r = r ^ r >> 17;
+                r = r ^ r << 5;
+                R[k] = r;
+            }
+        }
+
+        void generateRandomPermutationArray(unsigned int P[], unsigned int R[]) 
+        {
+            unsigned int totalPixels = height * width;
+            for (int i = 0; i < totalPixels; i++) P[i] = i;
+            
+            for (int i = totalPixels - 1; i >= 1; i--) swap(P[R[i] % i], P[i]);
+        }
         // TODO: 
-        void encryptBMP(unsigned int key)
+        void encryptBMP(unsigned int R0, unsigned int SV)
         {
             //TODO:
-            // Call Random Number Generator Function
-            // Call Pixel Permutation Function
-            // Call Pixel Encryption Function
+            unsigned int totalPixels = height * width;
+            unsigned int *R = new unsigned int [2 * totalPixels];
+            R[0] = R0;
+            generateRandomNumberArray(R);
+
+            unsigned int *P = new unsigned int [totalPixels];
+            generateRandomPermutationArray(P, R);
+
+            vector <RGBTRIPLE> tempPixels (rawPixels.begin(), rawPixels.end());
+
+            for (unsigned int i = 0; i < totalPixels; i++)
+            {
+                rawPixels[P[i]] = tempPixels[i];
+            } 
+
+            delete[] R;
+            delete[] P;
         }
 
         // TODO:
-        void decryptBMP(unsigned int key)
+        void decryptBMP(unsigned int R0, unsigned int SV)
         {
+            unsigned int totalPixels = height * width;
+            unsigned int *R = new unsigned int [2 * totalPixels];
+            R[0] = R0;
+            generateRandomNumberArray(R);
+
+            unsigned int *P = new unsigned int [totalPixels];
+            generateRandomPermutationArray(P, R);
+
+            vector <RGBTRIPLE> tempPixels (rawPixels.begin(), rawPixels.end());
+
+            for (unsigned int i = 0; i < totalPixels; i++) rawPixels[i] = tempPixels[P[i]];
+
             //TODO:
             // Call Random Number Generator Function
             // Call Pixel Permutation Function
