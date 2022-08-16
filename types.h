@@ -77,11 +77,11 @@ public:
 
         this->height = bi.biHeight;
         this->width = bi.biWidth;
-        if (!is24_bit_BMP(bf, bi))
-        {
-            fin.close();
-            cout << "Unsupported file format.\n";
-        }
+        // if (is24_bit_BMP(bf, bi) == false)
+        // {
+        //     fin.close();
+        //     cout << "Unsupported file format.\n";
+        // }
         // Calculate extra padding
         padding = (4 - ((width * 3) % 4)) % 4;
         for (int y = 0; y < height; y++)
@@ -139,7 +139,7 @@ public:
         for (int i = totalPixels - 1; i >= 1; i--)
             swap(P[R[i] % i], P[i]);
     }
-    
+
     void XORintegerXpixel(unsigned int integer, RGBTRIPLE &pixel)
     {
         unsigned char *c;
@@ -183,8 +183,8 @@ public:
             {
                 XORintegerXpixel(SV, rawPixels[k]);
                 XORintegerXpixel(R[(width * height) + k], rawPixels[k]);
-            }   
-            ofstream ED_validate("ED_validate.txt");
+            }
+            ofstream ED_validate("ED_validate.txt", ios::app);
             string encrypted = fileName + "Encrypted";
             ED_validate << encrypted;
             ED_validate.close();
@@ -199,13 +199,13 @@ public:
             }
 
             // Reverse permutate the deciphered pixels
-            vector <RGBTRIPLE> decipheredPixels (rawPixels.begin(), rawPixels.end());
+            vector<RGBTRIPLE> decipheredPixels(rawPixels.begin(), rawPixels.end());
             for (unsigned int i = 0; i < totalPixels; i++)
             {
-                rawPixels[i] = decipheredPixels[P[i]]; 
+                rawPixels[i] = decipheredPixels[P[i]];
             }
-            
-            ofstream ED_validate("ED_validate.txt");
+
+            ofstream ED_validate("ED_validate.txt", ios::app);
             string decrypted = fileName + "Decrypted";
             ED_validate << decrypted;
             ED_validate.close();
@@ -226,4 +226,22 @@ public:
             return true;
         }
     }
+
+    void key_generator(char password[20])
+    {
+        char password_t = password[20];
+        long long int random_n =0;
+        for (int i = 0; i < sizeof(random_n); i++)
+        {
+            random_n = password[i] - '0';
+            random_n++;
+        }
+        
+        random_n = pow(random_n, 3);
+        ofstream password_store("password.dat", ios::app);
+        password_store << random_n << endl
+                       << password << endl;
+        password_store.close();
+    }
+
 };
