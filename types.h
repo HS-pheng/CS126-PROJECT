@@ -67,7 +67,7 @@ public:
         this->fileName = fileName;
     };
 
-    // TODO: read from bitmapfile picture in a linear fashion
+    // Read from bitmapfile picture in a linear fashion
     void read()
     {
         fstream fin(fileName, ios::in);
@@ -95,7 +95,7 @@ public:
             fin.seekg(padding, ios::cur);
         }
     }
-    // TODO: write to bitmapfile picture
+    // Write to bitmapfile picture
     void write()
     {
         fstream fout(fileName, ios::out);
@@ -139,6 +139,24 @@ public:
         for (int i = totalPixels - 1; i >= 1; i--)
             swap(P[R[i] % i], P[i]);
     }
+    
+    void XORintegerXpixel(unsigned int integer, RGBTRIPLE &pixel)
+    {
+        unsigned char *c;
+        c = (unsigned char *)&integer;
+        pixel.rgbtBlue = (pixel.rgbtBlue) ^ (*c);
+        c++;
+        pixel.rgbtGreen = (pixel.rgbtGreen) ^ (*c);
+        c++;
+        pixel.rgbtRed = (pixel.rgbtRed) ^ (*c);
+    }
+
+    void XORpixelXpixel(RGBTRIPLE &pixel1, RGBTRIPLE pixel2)
+    {
+        pixel1.rgbtBlue = (pixel1.rgbtBlue) ^ (pixel2.rgbtBlue);
+        pixel1.rgbtGreen = (pixel1.rgbtGreen) ^ (pixel2.rgbtGreen);
+        pixel1.rgbtRed = (pixel1.rgbtRed) ^ (pixel2.rgbtRed);
+    }
 
     void cipherBMP(unsigned int R0, unsigned int SV, operationMode mode)
     {
@@ -154,10 +172,18 @@ public:
 
         if (mode == operationMode::encrypt)
         {
+            // Permutate the pixels
             for (unsigned int i = 0; i < totalPixels; i++)
             {
                 rawPixels[P[i]] = tempPixels[i];
             }
+
+            // Encipher the permutated pixels
+            for (unsigned int k = 0; k < totalPixels; k++)
+            {
+                XORintegerXpixel(SV, rawPixels[k]);
+                XORintegerXpixel(R[(width * height) + k], rawPixels[k]);
+            }   
             ofstream ED_validate("ED_validate.txt");
             string encrypted = fileName + "Encrypted";
             ED_validate << encrypted;
@@ -165,10 +191,20 @@ public:
         }
         else
         {
+            // Decipher the permutated pixels
+            for (unsigned int k = 0; k < totalPixels; k++)
+            {
+                XORintegerXpixel(SV, rawPixels[k]);
+                XORintegerXpixel(R[(width * height) + k], rawPixels[k]);
+            }
+
+            // Reverse permutate the deciphered pixels
+            vector <RGBTRIPLE> decipheredPixels (rawPixels.begin(), rawPixels.end());
             for (unsigned int i = 0; i < totalPixels; i++)
             {
-                rawPixels[i] = tempPixels[P[i]];
+                rawPixels[i] = decipheredPixels[P[i]]; 
             }
+            
             ofstream ED_validate("ED_validate.txt");
             string decrypted = fileName + "Decrypted";
             ED_validate << decrypted;
