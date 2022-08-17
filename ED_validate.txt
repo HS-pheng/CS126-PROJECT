@@ -1,12 +1,10 @@
-sample.bmp,encrypted
-test.bmp,descrypted
 
 
-
-// sample.bmp,encrypted
-getline()
-    sstream (sample.bmp,encrypted)
-        getline(sstream, temp, ',');
-        getline(sstream, temp, '\n');
-        map <string, string> 
-            map["sample.bmp"] == "encrypted";
+land1.bmp
+decrypt
+land2.bmp
+decrypt
+land3.bmp
+decrypt
+land4.bmp
+decrypt
