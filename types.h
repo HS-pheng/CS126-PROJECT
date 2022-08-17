@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <string>
+#include <algorithm>
 using namespace std;
 
 typedef uint8_t BYTE;
@@ -162,6 +164,7 @@ public:
     {
         unsigned int totalPixels = height * width;
         unsigned int *R = new unsigned int[2 * totalPixels];
+        string file = fileName;
         R[0] = R0;
         generateRandomNumberArray(R);
 
@@ -169,7 +172,7 @@ public:
         generateRandomPermutationArray(P, R);
 
         vector<RGBTRIPLE> tempPixels(rawPixels.begin(), rawPixels.end());
-
+        
         if (mode == operationMode::encrypt)
         {
             // Permutate the pixels
@@ -185,8 +188,9 @@ public:
                 XORintegerXpixel(R[(width * height) + k], rawPixels[k]);
             }
             ofstream ED_validate("ED_validate.txt", ios::app);
-            string encrypted = fileName + "Encrypted";
-            ED_validate << encrypted;
+
+            ED_validate << file << endl
+                        << "encrypt" << endl;
             ED_validate.close();
         }
         else
@@ -206,8 +210,8 @@ public:
             }
 
             ofstream ED_validate("ED_validate.txt", ios::app);
-            string decrypted = fileName + "Decrypted";
-            ED_validate << decrypted;
+            ED_validate << file << endl
+                        << "decrypt" << endl;
             ED_validate.close();
         }
         delete[] R;
@@ -227,21 +231,71 @@ public:
         }
     }
 
-    void key_generator(char password[20])
+    int key_generator(string password)
     {
-        char password_t = password[20];
-        long long int random_n =0;
-        for (int i = 0; i < sizeof(random_n); i++)
+        ofstream password_store("password.txt", ios::app);
+        string p = password;
+        long long int random_n = 0;
+        string random_s;
+        for (int i = 0; i < password.length(); i++)
         {
-            random_n = password[i] - '0';
-            random_n++;
+            random_n = int(password[i]);
+            random_n += random_n;
         }
-        
-        random_n = pow(random_n, 3);
-        ofstream password_store("password.dat", ios::app);
-        password_store << random_n << endl
-                       << password << endl;
+
+        random_n = pow(random_n, 2);
+        random_s = to_string(random_n);
+
+        password_store << p << endl
+                       << random_s << endl;
         password_store.close();
+
+        return random_n;
     }
 
+    bool encrypt_option_validation(string t_filename, string choice)
+    {
+        string f;
+        string e_d_status;
+        ifstream e_file_validation("ED_validation.txt");
+        while (!e_file_validation.eof())
+        {
+            getline(e_file_validation, f);
+            if (t_filename == f)
+            {
+                getline(e_file_validation, e_d_status);
+                if (choice == e_d_status)
+                {
+                    break;
+                    return true;
+                }
+            }
+            else
+                break;
+            return false;
+        }
+        e_file_validation.close();
+    }
+
+    string read_key(string password)
+    {
+        string t_line;
+        string e_key;
+        int keyy;
+        ifstream key("password.txt");
+        while (!key.eof())
+        {
+            getline(key, t_line);
+            if (password == t_line)
+            {
+                getline(key, e_key);
+                return e_key;
+            }
+            else 
+            {
+                cout << "Password is incorrect!" << endl;
+                exit(0);
+            }
+        }
+    }
 };
