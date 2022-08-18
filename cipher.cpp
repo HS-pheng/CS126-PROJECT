@@ -97,6 +97,7 @@ int main()
     
     // Write the pixels back to output bmp file
     BMP.write();
+    cout << "========= Operation has Completed! =========" << endl;
 }
 
 void print_menu()
