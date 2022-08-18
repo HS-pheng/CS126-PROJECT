@@ -1,125 +1,139 @@
 /*
 Group names:
 Description
-Compilation: g++ cipher.cpp -o cipher
-Run guide: ./cipher -enc/-dec inFile.bmp [optional: outFile.bmp]
 */
 
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <string>
-#include "functions.h"
+#include <utility>
 #include "types.h"
 
 using namespace std;
 
-bool encrypt_option_validation(string FILENAME, string option)
-{
-}
+void print_menu();
+int get_file_name(string &FILENAME);
+void get_input_choice(int &choice);
 
 int main()
 {
-    // TODO: input processing and validation (+check file's encryption and decryption status)
+    print_menu();
+
+    // Prompt user for choice and validate user input choice
     int choice;
-    string password, configured_password, e_d_password;
-    string option;
+    get_input_choice(choice);
+
+    // Interpret user's choice
+    string option = choice == 1 ? "encrypt" : "decrypt";
+
+    // Prompt user for filename and check if it can be openned
     string FILENAME;
-
-    ifstream fin("password.txt");
-    ofstream fout("password.txt", ios::app);
-    if (fin.is_open())
+    if (get_file_name(FILENAME) == false)
     {
-        fin.seekg(0, ios::end);
-        if (fin.tellg() == 0)
-        {
-            string password;
-            cout << "Please configure a passsword: ";
-            cin >> password;
-            fout << password << endl;
-        }
+        cout << endl << "file cannot be openned\n" << endl; 
+        return 1;
     }
 
-    cout << "========= Ecryption & Decryption Program =========" << endl;
-    cout << "[1]. Encryption" << endl
-         << "[2]. Decryption" << endl
-         << "\tEnter your choice: ";
-    cin >> choice;
-
-    if (choice > 2 or choice < 1)
-    {
-        cout << "Invalid input! Please enter the choice in NUMBER!" << endl;
-        main();
-    }
-
-    switch (choice)
-    {
-    case 1:
-        option = "encrypt";
-        break;
-    case 2:
-        option = "decrypt";
-        break;
-    }
-
-    cout << "Enter file name (in the format of bmp): ";
-    cin >> FILENAME;
-
+    // Validate its enc/dec status
     BitMapPicture BMP(FILENAME);
-
     if (BMP.encrypt_option_validation(FILENAME, option) == true)
     {
         cout << "Operation is INVALID!" << endl;
         exit(0);
     }
 
-    // TODO: password confirmation (if password is not configured, prompt user for entering the password)
+    // Prompt user for password configuration if a password has not been signed up
+    ifstream get_password("password.txt");
+    string configured_password, user_entered_password;
+    if (get_password.is_open())
+    {
+        get_password.seekg(0, ios::end);
+        if (get_password.tellg() == 0)
+        {
+            ofstream put_password("password.txt", ios::app);
+            string password;
+            cout << "Please configure a new passsword: ";
+            cin >> password;
+            put_password << password << endl;
+            put_password.close();
+        }
+        else
+        {
+            // Read password.txt file
+            get_password.seekg(0, ios::beg);
+            get_password >> configured_password;
+            // Get password
+            cout << "Enter the password: ";
+            cin >> user_entered_password;
+            if (configured_password != user_entered_password)
+            {
+                cout << "Wrong password!" << endl;
+                get_password.close();
+                exit(0);
+            }
+            get_password.close();
+        }
+    }
 
-    // TODO: read bitmap file picture + file format validation
+    // Read bitmap file picture into memory 
     BMP.read();
 
-    //read password.txt file
-    ifstream get_password("password.txt");
-    // TODO: encryption or decryption
+    // Generate key from the password
+    pair <unsigned int, unsigned int> key_pairs = BMP.key_pairs_generator(configured_password);
+
+    // Encrypt or decrypt the image
     switch (choice)
     {
-    case 1:
-
-        get_password >> configured_password;
-        // get password
-        cout << "Enter the password: ";
-        cin >> e_d_password;
-        if (configured_password != e_d_password)
-        {
-            cout << "Wrong password!" << endl;
-            exit(0);
-        }
-        
-        // encryption function
-        BMP.cipherBMP(BMP.key_generator(configured_password), 123, operationMode::encrypt);
-
-        break;
-    case 2:
-       
-        get_password >> configured_password;
-        //get password
-        cout << "Enter the password: ";
-        cin >> e_d_password;
-        if (configured_password != e_d_password)
-        {
-            cout << "Wrong password!" << endl;
-            exit(0);
-        }
-        get_password.close();
-
-        string e_skey = BMP.read_key(configured_password);
-        int e_ikey = atoi(e_skey.c_str()); // convert key from string to int
-        BMP.cipherBMP(e_ikey, 123, operationMode::decrypt);
-
-        break;
+        case 1:
+            // Encryptthe the image
+            BMP.cipherBMP(key_pairs.first, key_pairs.second, operationMode::encrypt);
+            break;
+        case 2: 
+            // Decrypt the image
+            BMP.cipherBMP(key_pairs.first, key_pairs.second, operationMode::decrypt);
+            break;
     }
     
-
-    // TODO: write the pixels back to output bmp file
+    // Write the pixels back to output bmp file
     BMP.write();
+}
+
+void print_menu()
+{
+    cout << "========= Ecryption & Decryption Program =========" << endl;
+    cout << "[1]. Encryption" << endl
+         << "[2]. Decryption" << endl
+         << "\tEnter your choice: ";
+}
+
+int get_file_name(string &FILENAME)
+{
+    cout << "\tEnter file name (in the format of bmp): ";
+    cin >> FILENAME;
+    ifstream inputBMP(FILENAME);
+    if (!inputBMP.is_open())
+    {
+        return 0;
+    }
+    return 1;
+}
+
+void get_input_choice(int &choice)
+{
+    bool input_err;
+    do
+    {
+        input_err = false;
+        cin >> choice;
+        if (cin.fail() || (choice != 2 && choice != 1))
+        {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            input_err = true;
+            cout << "\n\tInvalid input choice\n\n";
+            cout << "\tEnter your choice: ";
+        }
+    }
+    while (input_err);
 }

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <map>
 #include <sstream>
+#include <utility>
+
 using namespace std;
 
 typedef uint8_t BYTE;
@@ -157,6 +159,34 @@ public:
         pixel1.rgbtRed = (pixel1.rgbtRed) ^ (pixel2.rgbtRed);
     }
 
+    void editFileStatusTo(string newStatus)
+    {
+        // Read filenames and their status into memory
+        ifstream e_file_validation("ED_validate.txt");
+        map<string, string> m;
+        while (!e_file_validation.eof())
+        {
+            string file_name;
+            getline(e_file_validation, file_name);
+            string status;
+            getline(e_file_validation, status);
+            m[file_name] = status;
+        }
+        e_file_validation.close();
+
+        m[fileName] = newStatus;
+        fstream put_e_file_validation("ED_validate.txt", ios::out);
+        stringstream ss;
+        for (auto e : m)
+        {
+            string temp1 = e.first;
+            string temp2 = e.second;
+            ss << temp1 << endl << temp2 << endl;
+        }
+        put_e_file_validation << ss.str() << endl;
+        put_e_file_validation.close();
+    }
+
     void cipherBMP(unsigned int R0, unsigned int SV, operationMode mode)
     {
         unsigned int totalPixels = height * width;
@@ -185,35 +215,7 @@ public:
                 XORintegerXpixel(R[(width * height) + k], rawPixels[k]);
             }
 
-            ifstream e_file_validation("ED_validate.txt");
-
-            map<string, string> m;
-            while (!e_file_validation.eof())
-            {
-                string file_name;
-                getline(e_file_validation, file_name);
-                string status;
-                getline(e_file_validation, status);
-                m[file_name] = status;
-            }
-            e_file_validation.close();
-            // for (auto e : m)
-            // {
-            //     cout << e.first << " " << e.second << endl;
-            // }
-            m[fileName] = "encrypt";
-            fstream fout("ED_validate.txt", ios::out);
-            stringstream ss;
-            for (auto e : m)
-            {
-                string temp1 = e.first;
-                string temp2 = e.second;
-                ss << temp1 << endl << temp2 << endl;
-            }
-            cout << ss.str() << endl;
-            fout << ss.str() << endl;
-
-            fout.close();
+            editFileStatusTo("encrypt");
         }
         else
         {
@@ -231,31 +233,7 @@ public:
                 rawPixels[i] = decipheredPixels[P[i]];
             }
 
-            ifstream e_file_validation("ED_validate.txt");
-
-            map<string, string> m;
-            while (!e_file_validation.eof())
-            {
-                string file_name;
-                getline(e_file_validation, file_name);
-                string status;
-                getline(e_file_validation, status);
-                m[file_name] = status;
-            }
-            e_file_validation.close();
-            for (auto e : m)
-            {
-                cout << e.first << endl << e.second << endl;
-            }
-
-            m[fileName] = "decrypt";
-            ofstream fout("ED_validate.txt");
-            
-            for (auto e : m)
-            {
-                fout << e.first << endl << e.second << endl;
-            }
-
+            editFileStatusTo("decrypt");
         } 
         delete[] R;
         delete[] P;
@@ -274,36 +252,19 @@ public:
         }
     }
 
-    int key_generator(string password)
+    pair <unsigned int, unsigned int> key_pairs_generator(string password)
     {
-        ofstream password_store("password.txt", ios::app);
-        string p = password;
-        long long int random_n = 0;
-        string random_s, random_cipher_key;
-        
+        pair <unsigned int, unsigned int> key_pairs;
+        unsigned int random_n1 = 0;
         for (int i = 0; i < password.length(); i++)
         {
-            random_n = int(password[i]);
-            random_n += random_n;
+            random_n1 += int(password[i]);
         }
-        random_n = pow(random_n, 2);
-        // for (int i = 0; i < password.length(); i++)
-        // {
-        //     random_n = int(password[i]);
-        //     random_n += random_n;
-        // }
-        
-        random_s = to_string(random_n);
-
-        password_store << random_s << endl;
-
-        // fin >> configured_password;
-        // entered password;
-        // 
-                    //    << random_cipher_key << endl;
-        password_store.close();
-
-        return random_n;
+        random_n1 = pow(random_n1, 2);
+        unsigned int random_n2 = pow(random_n1, 3);
+        key_pairs.first = random_n1;
+        key_pairs.second = random_n2;
+        return key_pairs;
     }
 
     bool encrypt_option_validation(string t_filename, string choice)
@@ -326,7 +287,6 @@ public:
         if (m.find(t_filename) == m.end())
         {
             if (choice == "encrypt")
-                
                 return false;
             else
                 return true;
@@ -334,44 +294,13 @@ public:
         else
         {
             if (m[t_filename] == "encrypt" && choice == "encrypt")
-            {
                 return true;
-            }
             else if(m[t_filename] == "decrypt" && choice == "decrypt")
-            {
                 return true;
-            }
             else 
-            {
                 return false;
-            }
         }
 
         e_file_validation.close();
-    }
-    
-    string read_key(string password)
-    {
-        string t_line;
-        string e_key;
-        bool flag = false;
-        ifstream key("password.txt");
-
-        while (!key.eof())
-        {
-            getline(key, t_line);
-            if (password == t_line)
-            {
-                getline(key, e_key);
-                flag = true;
-                return e_key;
-            }
-            
-        }
-        if(!flag)
-            {
-                cout << "Password is incorrect!" << endl;
-                exit(0);
-            }
     }
 };
