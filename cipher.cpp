@@ -39,7 +39,7 @@ int main()
     BitMapPicture BMP(FILENAME);
     if (BMP.encrypt_option_validation(FILENAME, option) == true)
     {
-        cout << "Operation is INVALID!" << endl;
+        cout << "Operation or Filename is INVALID!" << endl;
         exit(0);
     }
 
